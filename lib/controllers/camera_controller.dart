@@ -64,7 +64,7 @@ class FaceController extends GetxController {
     String message = '';
 
     loading.value = true;
-    Uri uri = Uri.parse('http://172.16.105.189:8000/attendance/detect');
+    Uri uri = Uri.parse('https://attendance.seateklab.vn/attendance/detect');
     final request = http.MultipartRequest("POST", uri);
 
     // request.fields['s_identification_id'] = 'SC021000670';
@@ -93,7 +93,7 @@ class FaceController extends GetxController {
       flag = true;
       message = "Chấm công thành công";
     } else {
-      // print("Upload lỗi: ${response.statusCode} ${resBody.body}");
+      print("Upload lỗi: ${response.statusCode} ${resBody.body}");
       await textToSpeak("Chấm công thất bại, vui lòng thử lại");
       flag = false;
       message = "Chấm công thất bại, vui lòng thử lại";
@@ -198,7 +198,7 @@ class FaceController extends GetxController {
 
     loading.value = true;
     detected.value = true;
-    Uri uri = Uri.parse('http://172.16.105.189:8000/users/register');
+    Uri uri = Uri.parse('https://attendance.seateklab.vn/users/register');
     final request = http.MultipartRequest("POST", uri);
 
     request.fields['s_identification_id'] = sIdentificationId;
