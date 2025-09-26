@@ -1,4 +1,3 @@
-import 'package:face_camera/face_camera.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:sea_attendance/components/custom_button.dart';

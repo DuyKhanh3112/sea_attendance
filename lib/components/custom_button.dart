@@ -10,24 +10,30 @@ class CustomButton extends StatelessWidget {
     this.onClicked,
     this.bgColor,
     this.textColor,
+    this.padding,
+    this.margin,
   });
 
   final String title;
   final Future<void> Function()? onClicked;
   final Color? bgColor;
   final Color? textColor;
+  final EdgeInsetsGeometry? padding;
+  final EdgeInsetsGeometry? margin;
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: EdgeInsets.symmetric(vertical: 32),
+      padding: margin ?? EdgeInsets.symmetric(vertical: 18),
       decoration: const BoxDecoration(),
       child: ElevatedButton(
         onPressed: onClicked,
         style: ElevatedButton.styleFrom(
           backgroundColor: bgColor ?? AppColor.blue,
           foregroundColor: textColor ?? Colors.white,
-          padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 32),
+          padding:
+              padding ?? EdgeInsets.symmetric(vertical: 16, horizontal: 24),
+
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
           ),

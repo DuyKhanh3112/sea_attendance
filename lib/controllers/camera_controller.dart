@@ -1,14 +1,14 @@
-import 'dart:convert';
+// ignore_for_file: avoid_print
+
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:dio/dio.dart';
 import 'package:face_camera/face_camera.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 import 'package:get/get.dart' hide FormData, MultipartFile;
-import 'package:get/get_connect/http/src/http/io/file_decoder_io.dart';
 import 'package:http/http.dart' as http;
+import 'package:sea_attendance/components/custom_button.dart';
 
 class FaceController extends GetxController {
   Rx<FaceCameraController> controller = FaceCameraController(
@@ -59,9 +59,11 @@ class FaceController extends GetxController {
     await flutterTts.speak(text);
   }
 
-  Future<bool> takePhoto(File file) async {
+  Future<Map<String, dynamic>> takePhoto(File file) async {
+    bool flag = false;
+    String message = '';
+
     loading.value = true;
-    Get.back();
     Uri uri = Uri.parse('http://172.16.105.189:8000/attendance/detect');
     final request = http.MultipartRequest("POST", uri);
 
@@ -85,69 +87,152 @@ class FaceController extends GetxController {
     print('============================');
 
     if (resBody.statusCode == 200) {
-      print("Status code: ${resBody.body}");
+      print("data: ${resBody.body}");
 
       await textToSpeak("Chấm công thành công");
+      flag = true;
+      message = "Chấm công thành công";
     } else {
-      print("Upload lỗi: ${response.statusCode} ${resBody.body}");
+      // print("Upload lỗi: ${response.statusCode} ${resBody.body}");
       await textToSpeak("Chấm công thất bại, vui lòng thử lại");
+      flag = false;
+      message = "Chấm công thất bại, vui lòng thử lại";
     }
     print('============================');
-    // final dio = Dio();
-    // final formData = FormData.fromMap({
-    //   // 's_identification_id': 'SC025001535',
-    //   'image': await MultipartFile.fromFile(
-    //     file.path,
-    //     // filename: file.path.split('/').last,
-    //   ),
-    // });
-    // final response = await dio.post(
-    //   'http://172.16.105.189:8000/attendance/detect',
-    //   data: formData,
-    //   options: Options(headers: {'Accept': 'application/json'}),
-    //   onSendProgress: (sent, total) {
-    //     print("progress: ${(sent / total * 100).toStringAsFixed(0)}%");
-    //   },
-    // );
-    // if (response.statusCode == 200) {
-    //   await textToSpeak("Chấm công thành công");
-    //   print(response.data);
-    // } else {
-    //   await textToSpeak("Chấm công thất bại, vui lòng thử lại");
-    // }
-    // print("================================");
+    if (!flag) {
+      final formKey = GlobalKey<FormState>();
+      TextEditingController nameController = TextEditingController();
+      await Get.dialog(
+        AlertDialog(
+          title: Column(
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text('Đăng ký khuôn mặt'),
+                  InkWell(
+                    onTap: () {
+                      Get.back();
+                      Get.back();
+                      // Get.toNamed('/register');
+                    },
+                    child: const Icon(Icons.close, size: 20),
+                  ),
+                ],
+              ),
+              Divider(),
+            ],
+          ),
+          content: Form(
+            key: formKey,
+            child: SizedBox(
+              width: Get.width,
+              child: TextFormField(
+                controller: nameController,
+                decoration: InputDecoration(
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8.0),
+                  ),
+                  labelText: 'Mã SC',
+                ),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Vui lòng nhập mã SC';
+                  }
+                  return null;
+                },
+              ),
+            ),
+          ),
+          actions: [
+            Column(
+              children: [
+                Divider(),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    CustomButton(
+                      title: ' Đăng ký',
+                      padding: EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+                      margin: EdgeInsets.only(right: 16),
+                      onClicked: () async {
+                        if (formKey.currentState!.validate()) {
+                          Get.back();
+                          registerFace(file, nameController.text);
+
+                          Get.back();
+                          // Get.toNamed('/register');
+                        }
+                      },
+                    ),
+                    CustomButton(
+                      title: 'Hủy',
+                      bgColor: Colors.red,
+                      textColor: Colors.white,
+                      padding: EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+                      onClicked: () async {
+                        Get.back();
+                        Get.back();
+                        // Get.toNamed('/register');
+                      },
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ],
+        ),
+      );
+    }
 
     loading.value = false;
-    // Get.back();
-    return true;
+    return {'success': flag, 'message': message};
   }
 
-  Future<void> detectAttendance(File file) async {
-    Get.back();
-    final uri = Uri.parse('http://172.16.105.189:8000/attendance/detect');
+  Future<Map<String, dynamic>> registerFace(
+    File file,
+    String sIdentificationId,
+  ) async {
+    bool flag = false;
+    String message = '';
+
+    loading.value = true;
+    detected.value = true;
+    Uri uri = Uri.parse('http://172.16.105.189:8000/users/register');
     final request = http.MultipartRequest("POST", uri);
 
-    // request.fields['s_identification_id'] = 'SC018000172';
-    request.files.add(await http.MultipartFile.fromPath('image', file.path));
+    request.fields['s_identification_id'] = sIdentificationId;
+
+    Uint8List fileBytes = await file.readAsBytes();
+    request.files.add(
+      http.MultipartFile.fromBytes(
+        'images', // tên field trong API
+        fileBytes, // dữ liệu bytes
+        filename: file.path.split('/').last, // tên file gửi kèm
+      ),
+    );
+    request.headers.addAll({
+      "Accept": "application/json",
+      "Content-Type": "multipart/form-data",
+    });
 
     final response = await request.send();
     final resBody = await http.Response.fromStream(response);
+    print('============================');
 
     if (resBody.statusCode == 200) {
-      final data = jsonDecode(resBody.body);
+      print("data: ${resBody.body}");
 
-      // print("Matched: ${data['matched']}");
-      // print("User: ${data['user']}");
-      // print("Score: ${data['score']}");
-      // print("Time: ${data['at']}");
-
-      // Ví dụ: thông báo bằng SnackBar
-      // ignore: use_build_context_synchronously
-      // ScaffoldMessenger.of(context).showSnackBar(
-      //   SnackBar(content: Text("Chấm công thành công: ${data['user']['name']}")),
-      // );
+      await textToSpeak("Đăng ký khuôn mặt thành công");
+      flag = true;
+      message = "Đăng ký khuôn mặt thành công";
     } else {
-      print("Upload lỗi: ${resBody.statusCode} ${resBody.body}");
+      print("Upload lỗi: ${response.statusCode} ${resBody.body}");
+      await textToSpeak("Đăng ký khuôn mặt thất bại, vui lòng thử lại");
+      flag = false;
+      message = "Đăng ký khuôn mặt thất bại, vui lòng thử lại";
     }
+    loading.value = false;
+    return {'success': flag, 'message': message};
   }
 }

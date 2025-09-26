@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:face_camera/face_camera.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:sea_attendance/components/custom_button.dart';
 import 'package:sea_attendance/controllers/camera_controller.dart';
 import 'package:sea_attendance/utils/loading_page.dart';
 
@@ -24,22 +25,13 @@ class AttendancePage extends StatelessWidget {
                   autoCapture: true, // tắt auto, mình sẽ điều khiển thủ công
                   defaultCameraLens: CameraLens.front,
                   onCapture: (File? file) async {
-                    if (file != null) {
-                      // await faceController.textToSpeak("Chụp ảnh thành công");
-                      // print(file.path);
-                      // await Get.dialog(
-                      //   AlertDialog(
-                      //     title: const Text('Ảnh chụp'),
-                      //     content: Image.file(
-                      //       file,
-                      //       width: 200,
-                      //       height: 200,
-                      //       fit: BoxFit.cover,
-                      //     ),
-                      //   ),
-                      // );
-                      await faceController.takePhoto(file);
-                      // await faceController.detectAttendance(file);
+                    if (file != null && !faceController.detected.value) {
+                      Map<String, dynamic> res = await faceController.takePhoto(
+                        file,
+                      );
+
+                      await Future.delayed(const Duration(seconds: 5));
+                      faceController.detected.value = false;
                     }
                   },
                 ),
