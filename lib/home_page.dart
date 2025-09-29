@@ -20,6 +20,7 @@ class HomePage extends StatelessWidget {
                 onClicked: () async {
                   // await FaceCamera.initialize();
                   Get.toNamed('/attendance');
+                  // await Get.find<FaceController>().textToSpeak('Xin cảm ơn');
                 },
               ),
               CustomButton(

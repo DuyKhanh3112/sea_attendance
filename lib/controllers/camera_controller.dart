@@ -9,6 +9,7 @@ import 'package:flutter_tts/flutter_tts.dart';
 import 'package:get/get.dart' hide FormData, MultipartFile;
 import 'package:http/http.dart' as http;
 import 'package:sea_attendance/components/custom_button.dart';
+import 'package:sea_attendance/config.dart';
 
 class FaceController extends GetxController {
   Rx<FaceCameraController> controller = FaceCameraController(
@@ -28,31 +29,21 @@ class FaceController extends GetxController {
   Rx<File> image = File('').obs;
   RxBool loading = false.obs;
 
-  // @override
-  // void onInit() {
-  //   controller.value = FaceCameraController(
-  //     autoCapture: false, // tắt auto, mình sẽ điều khiển thủ công
-  //     defaultCameraLens: CameraLens.front,
-  //     onCapture: (File? file) async {
-  //       if (file != null) {
-  //         await textToSpeak("Chụp ảnh thành công");
-  //       }
-  //     },
-  //     onFaceDetected: (Face? face) async {
-  //       if (face != null) {
-  //         await textToSpeak(' Phát hiện khuôn mặt');
-  //       } else {
-  //         detected.value = false; // reset khi không thấy mặt nữa
-  //       }
-  //     },
-  //   );
-
-  //   super.onInit();
-  // }
-
   Future<void> textToSpeak(String text) async {
     FlutterTts flutterTts = FlutterTts();
-    await flutterTts.setLanguage('vi-VN'); // hỗ trợ "vi-VN", "en-US", ...
+    await flutterTts.setEngine("com.google.android.tts");
+    // final engines = await flutterTts.getEngines;
+    // print("Engines: $engines");
+    final langs = await flutterTts.getLanguages;
+    // print("Supported languages: $langs");
+
+    // await flutterTts.setLanguage('vi-VN');
+    if (langs.contains("vi-VN")) {
+      await flutterTts.setLanguage("vi-VN");
+    } else {
+      // fallback nếu không có tiếng Việt
+      await flutterTts.setLanguage("eng-US"); // hoặc eng-default
+    }
     await flutterTts.setPitch(1); // 0.5 - 2.0
     await flutterTts.setSpeechRate(0.5); // 0.0 - 1.0
     await flutterTts.setVolume(1.0); // 0.0 - 1.0
@@ -64,7 +55,7 @@ class FaceController extends GetxController {
     String message = '';
 
     loading.value = true;
-    Uri uri = Uri.parse('https://attendance.seateklab.vn/attendance/detect');
+    Uri uri = Uri.parse('${Config.url}/attendance/detect');
     final request = http.MultipartRequest("POST", uri);
 
     // request.fields['s_identification_id'] = 'SC021000670';
@@ -198,7 +189,7 @@ class FaceController extends GetxController {
 
     loading.value = true;
     detected.value = true;
-    Uri uri = Uri.parse('https://attendance.seateklab.vn/users/register');
+    Uri uri = Uri.parse('${Config.url}/users/register');
     final request = http.MultipartRequest("POST", uri);
 
     request.fields['s_identification_id'] = sIdentificationId;
