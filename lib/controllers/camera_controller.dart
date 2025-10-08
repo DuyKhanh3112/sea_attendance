@@ -32,7 +32,7 @@ class FaceController extends GetxController {
 
   Future<void> textToSpeak(String text) async {
     FlutterTts flutterTts = FlutterTts();
-    // await flutterTts.setEngine("com.google.android.tts");
+    await flutterTts.setEngine("com.google.android.tts");
     // final engines = await flutterTts.getEngines;
     // print("Engines: $engines");
     final langs = await flutterTts.getLanguages;
@@ -46,7 +46,7 @@ class FaceController extends GetxController {
       await flutterTts.setLanguage("en-US"); // hoặc eng-default
     }
     await flutterTts.setPitch(1); // 0.5 - 2.0
-    await flutterTts.setSpeechRate(1); // 0.0 - 1.0
+    await flutterTts.setSpeechRate(0.8); // 0.0 - 1.0
     await flutterTts.setVolume(1.0); // 0.0 - 1.0
     await flutterTts.speak(text);
   }
